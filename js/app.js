@@ -1,4 +1,4 @@
-import { startRouter } from "./router.js";
+import { getCurrentRoute, startRouter } from "./router.js";
 import {
   renderHome,
   renderAbout,
@@ -9,64 +9,91 @@ import {
 import { setupContactForm } from "./forms.js";
 
 const app = document.getElementById("app");
-const menuToggle = document.getElementById("menu-toggle");
-const mainMenu = document.getElementById("main-menu");
-const themeToggle = document.getElementById("theme-toggle");
 
-let previousFocus = null;
+const pageTitles = {
+  home: "Início",
+  about: "Sobre",
+  projects: "Projetos",
+  contact: "Contato"
+};
 
 function renderPage(route) {
-  const pages = {
-    home: renderHome,
-    about: renderAbout,
-    projects: renderProjects,
-    contact: renderContact
-  };
+  const title = pageTitles[route] || "Início";
 
-  const render = pages[route] || renderHome;
+  // Atualiza o título da aba conforme a página
+  document.title = `Impacto Social | ${title}`;
 
-  app.innerHTML = render();
+  switch (route) {
+    case "about":
+      app.innerHTML = renderAbout();
+      break;
 
-  setupContactForm();
+    case "projects":
+      app.innerHTML = renderProjects();
+      setupProjectModal();
+      break;
 
-  if (route === "projects") {
-    setupProjectModal();
+    case "contact":
+      app.innerHTML = renderContact();
+      setupContactForm();
+      break;
+
+    case "home":
+    default:
+      app.innerHTML = renderHome();
+      break;
   }
 
   closeMobileMenu();
 
+  // Leva o foco para o conteúdo principal
   app.focus();
 }
 
 function setupProjectModal() {
   const modal = document.getElementById("project-modal");
+
+  if (!modal) {
+    return;
+  }
+
   const modalTitle = document.getElementById("modal-title");
-  const modalCategory = document.getElementById("modal-category");
   const modalDescription = document.getElementById("modal-description");
   const modalClose = document.getElementById("modal-close");
+  const projectButtons = document.querySelectorAll(".project-button");
 
-  const projectButtons =
-    document.querySelectorAll(".project-button");
+  let lastFocusedElement = null;
+
+  function openModal(projectId, button) {
+    const project = getProjectById(projectId);
+
+    if (!project) {
+      return;
+    }
+
+    lastFocusedElement = button;
+
+    modalTitle.textContent = project.title;
+    modalDescription.textContent = project.description;
+
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+
+    modalClose.focus();
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    document.body.classList.remove("modal-open");
+
+    if (lastFocusedElement) {
+      lastFocusedElement.focus();
+    }
+  }
 
   projectButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      const project = getProjectById(
-        button.dataset.projectId
-      );
-
-      if (!project) {
-        return;
-      }
-
-      previousFocus = document.activeElement;
-
-      modalTitle.textContent = project.title;
-      modalCategory.textContent = project.category;
-      modalDescription.textContent = project.details;
-
-      modal.hidden = false;
-
-      modalClose.focus();
+      openModal(button.dataset.projectId, button);
     });
   });
 
@@ -78,91 +105,70 @@ function setupProjectModal() {
     }
   });
 
-  document.addEventListener("keydown", handleModalKeyboard);
-}
+  document.addEventListener("keydown", (event) => {
+    if (modal.hidden) {
+      return;
+    }
 
-function closeModal() {
-  const modal = document.getElementById("project-modal");
-
-  if (!modal) {
-    return;
-  }
-
-  modal.hidden = true;
-
-  if (previousFocus) {
-    previousFocus.focus();
-  }
-}
-
-function handleModalKeyboard(event) {
-  const modal = document.getElementById("project-modal");
-
-  if (!modal || modal.hidden) {
-    return;
-  }
-
-  if (event.key === "Escape") {
-    closeModal();
-  }
+    if (event.key === "Escape") {
+      closeModal();
+    }
+  });
 }
 
 function setupMenu() {
-  if (!menuToggle || !mainMenu) {
+  const menuToggle = document.getElementById("menu-toggle");
+  const menu = document.getElementById("main-menu");
+
+  if (!menuToggle || !menu) {
     return;
   }
 
   menuToggle.addEventListener("click", () => {
-    const isOpen =
-      menuToggle.getAttribute("aria-expanded") === "true";
+    const isOpen = menuToggle.getAttribute("aria-expanded") === "true";
 
-    menuToggle.setAttribute(
-      "aria-expanded",
-      String(!isOpen)
-    );
-
+    menuToggle.setAttribute("aria-expanded", String(!isOpen));
     menuToggle.setAttribute(
       "aria-label",
       isOpen ? "Abrir menu" : "Fechar menu"
     );
 
-    mainMenu.classList.toggle("menu-open", !isOpen);
+    menu.classList.toggle("is-open", !isOpen);
   });
 
-  mainMenu.addEventListener("click", (event) => {
-    if (event.target.matches("a")) {
+  menu.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
       closeMobileMenu();
-    }
+    });
   });
 }
 
 function closeMobileMenu() {
-  if (!menuToggle || !mainMenu) {
+  const menuToggle = document.getElementById("menu-toggle");
+  const menu = document.getElementById("main-menu");
+
+  if (!menuToggle || !menu) {
     return;
   }
 
   menuToggle.setAttribute("aria-expanded", "false");
   menuToggle.setAttribute("aria-label", "Abrir menu");
-  mainMenu.classList.remove("menu-open");
+  menu.classList.remove("is-open");
 }
 
 function setupTheme() {
+  const themeToggle = document.getElementById("theme-toggle");
+
   if (!themeToggle) {
     return;
   }
 
-  const savedTheme = localStorage.getItem(
-    "impacto-social-theme"
-  );
+  const savedTheme = localStorage.getItem("impacto-social-theme");
 
   if (savedTheme === "dark") {
     document.documentElement.dataset.theme = "dark";
-
     themeToggle.textContent = "☀️";
-    themeToggle.setAttribute(
-      "aria-label",
-      "Ativar modo claro"
-    );
+    themeToggle.setAttribute("aria-label", "Desativar modo escuro");
     themeToggle.setAttribute("aria-pressed", "true");
   }
 
@@ -171,12 +177,7 @@ function setupTheme() {
       document.documentElement.dataset.theme === "dark";
 
     if (isDark) {
-      document.documentElement.removeAttribute("data-theme");
-
-      localStorage.setItem(
-        "impacto-social-theme",
-        "light"
-      );
+      delete document.documentElement.dataset.theme;
 
       themeToggle.textContent = "🌙";
       themeToggle.setAttribute(
@@ -184,20 +185,19 @@ function setupTheme() {
         "Ativar modo escuro"
       );
       themeToggle.setAttribute("aria-pressed", "false");
+
+      localStorage.removeItem("impacto-social-theme");
     } else {
       document.documentElement.dataset.theme = "dark";
-
-      localStorage.setItem(
-        "impacto-social-theme",
-        "dark"
-      );
 
       themeToggle.textContent = "☀️";
       themeToggle.setAttribute(
         "aria-label",
-        "Ativar modo claro"
+        "Desativar modo escuro"
       );
       themeToggle.setAttribute("aria-pressed", "true");
+
+      localStorage.setItem("impacto-social-theme", "dark");
     }
   });
 }
