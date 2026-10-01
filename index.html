@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="Projeto social desenvolvido para apoiar iniciativas do terceiro setor."
+  >
+
+  <title>Impacto Social</title>
+
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="container header-content">
+
+      <a href="#/home" class="logo" aria-label="Impacto Social - Página inicial">
+        Impacto Social
+      </a>
+
+      <nav class="main-nav" aria-label="Navegação principal">
+        <button
+          id="menu-toggle"
+          class="menu-toggle"
+          type="button"
+          aria-label="Abrir menu"
+          aria-expanded="false"
+          aria-controls="main-menu"
+        >
+          ☰
+        </button>
+
+        <ul id="main-menu" class="menu">
+          <li><a href="#/home">Início</a></li>
+          <li><a href="#/about">Sobre</a></li>
+          <li><a href="#/projects">Projetos</a></li>
+          <li><a href="#/contact">Contato</a></li>
+        </ul>
+      </nav>
+
+      <button
+        id="theme-toggle"
+        class="theme-toggle"
+        type="button"
+        aria-label="Ativar modo escuro"
+        aria-pressed="false"
+      >
+        🌙
+      </button>
+
+    </div>
+  </header>
+
+  <main id="app" class="container" tabindex="-1">
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 Impacto Social. Projeto acadêmico.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="./js/app.js"></script>
+
+</body>
+</html>
